@@ -1,6 +1,7 @@
 import configparser
 import datetime
 from datetime import timedelta
+from time import sleep
 
 import requests
 
@@ -58,6 +59,11 @@ solaredge_request_payload = {
 
 solaredge_response = requests.get(solaredge_url, params=solaredge_request_payload).json()
 
+# We didn't get any telemetry data back for the last period, wait 5s and try again
+if solaredge_response['data']['count'] < 1:
+    sleep(5)
+    solaredge_response = requests.get(solaredge_url, params=solaredge_request_payload).json()
+
 print(solaredge_response)
 
 solaredge_dc_voltage = solaredge_response['data']['telemetries'][0]['dcVoltage']
@@ -84,14 +90,14 @@ date = datetime.strftime('%Y%m%d')
 time = datetime.strftime('%H:%M')
 
 pvoutput_request_data = {
-    'd':  date,
-    't':  time,
-    'v1': sense.daily_production * 1000,
-    'v2': sense.active_solar_power,
-    'v3': sense.daily_usage * 1000,
-    'v4': sense.active_power,
-    'v5': wunderground_temperature,
-    'v6': solaredge_dc_voltage,
+    'd':   date,
+    't':   time,
+    'v1':  sense.daily_production * 1000,
+    'v2':  sense.active_solar_power,
+    'v3':  sense.daily_usage * 1000,
+    'v4':  sense.active_power,
+    'v5':  wunderground_temperature,
+    'v6':  solaredge_dc_voltage,
     'v12': wunderground_solar_radiation,
 }
 
