@@ -1,0 +1,7 @@
+[sense_credentials]
+email =
+password =
+
+[pvoutput_credentials]
+system_id =
+api_key =
