@@ -8,7 +8,7 @@ from sense_energy import Senseable
 PV_OUTPUT_STATUS_URL = 'https://pvoutput.org/service/r2/addstatus.jsp'
 
 API_URL = 'https://api.sense.com/apiservice/api/v1/'
-API_TIMEOUT = 1
+API_TIMEOUT = 10
 
 config = configparser.ConfigParser()
 config.read('config.ini')
