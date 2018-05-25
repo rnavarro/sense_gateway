@@ -8,14 +8,16 @@ from sense_energy import Senseable
 PV_OUTPUT_STATUS_URL = 'https://pvoutput.org/service/r2/addstatus.jsp'
 
 config = configparser.ConfigParser()
-
 config.read('config.ini')
+
+datetime = datetime.datetime.now()
 
 sense_username = config.get('sense_credentials', 'email')
 sense_password = config.get('sense_credentials', 'password')
 
 sense = Senseable(sense_username, sense_password)
 
+print(datetime.isoformat(' '))
 print("Active:", sense.active_power, "W")
 print("Active Solar:", sense.active_solar_power, "W")
 print("Active Devices:", ", ".join(sense.active_devices))
@@ -24,8 +26,6 @@ print("Daily Production:", sense.daily_production, "kWh")
 
 pvoutput_apikey = config.get('pvoutput_credentials', 'api_key')
 pvoutput_system_id = config.get('pvoutput_credentials', 'system_id')
-
-datetime = datetime.datetime.now()
 
 date = datetime.strftime('%Y%m%d')
 time = datetime.strftime('%H:%M')
