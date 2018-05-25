@@ -34,6 +34,8 @@ wunderground_response = requests.get(wunderground_url).json()
 
 wunderground_temperature = wunderground_response['current_observation']['temp_c']
 
+wunderground_solar_radiation = wunderground_response['current_observation']['temp_c']
+
 ######################
 # Get SolarEdge Data #
 ######################
@@ -56,6 +58,8 @@ solaredge_request_payload = {
 
 solaredge_response = requests.get(solaredge_url, params=solaredge_request_payload).json()
 
+print(solaredge_response)
+
 solaredge_dc_voltage = solaredge_response['data']['telemetries'][0]['dcVoltage']
 
 ################
@@ -68,8 +72,10 @@ print("Active Solar:", sense.active_solar_power, "W")
 print("Active Devices:", ", ".join(sense.active_devices))
 print("Daily Usage:", sense.daily_usage, "kWh")
 print("Daily Production:", sense.daily_production, "kWh")
-print("Temperature:", wunderground_temperature, "F")
+print("Temperature:", wunderground_temperature, "C")
+print("Temperature:", wunderground_response['current_observation']['temp_f'], "F")
 print("DC Voltage:", solaredge_dc_voltage, "V")
+print("Solar Radiation:", wunderground_solar_radiation, "w/m^2")
 
 pvoutput_apikey = config.get('pvoutput_credentials', 'api_key')
 pvoutput_system_id = config.get('pvoutput_credentials', 'system_id')
@@ -86,6 +92,7 @@ pvoutput_request_data = {
     'v4': sense.active_power,
     'v5': wunderground_temperature,
     'v6': solaredge_dc_voltage,
+    'v12': wunderground_solar_radiation,
 }
 
 # https://pvoutput.org/help.html#api-spec
