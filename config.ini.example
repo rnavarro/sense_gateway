@@ -5,3 +5,12 @@ password =
 [pvoutput_credentials]
 system_id =
 api_key =
+
+[wunderground_credentials]
+api_key =
+station_id =
+
+[solaredge_credentials]
+site_id =
+api_key =
+serial_number =
