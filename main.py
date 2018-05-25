@@ -59,9 +59,9 @@ solaredge_request_payload = {
 
 solaredge_response = requests.get(solaredge_url, params=solaredge_request_payload).json()
 
-# We didn't get any telemetry data back for the last period, wait 10s and try again
+# We didn't get any telemetry data back for the last period, wait 30s and try again
 if solaredge_response['data']['count'] < 1:
-    sleep(10)
+    sleep(30)
     solaredge_response = requests.get(solaredge_url, params=solaredge_request_payload).json()
 
 print(solaredge_response)
