@@ -34,7 +34,7 @@ wunderground_response = requests.get(wunderground_url).json()
 
 wunderground_temperature = wunderground_response['current_observation']['temp_c']
 
-wunderground_solar_radiation = wunderground_response['current_observation']['temp_c']
+wunderground_solar_radiation = wunderground_response['current_observation']['solarradiation']
 
 ######################
 # Get SolarEdge Data #
