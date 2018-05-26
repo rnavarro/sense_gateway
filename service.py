@@ -36,12 +36,29 @@ def main():
     daily_wh_production = 0
     power_production_data = []
 
-    # This is just to make sure we don't shoot out 0 values
-    if daily_wh_consumption < sense.daily_usage * 1000:
-        daily_wh_consumption = sense.daily_usage * 1000
+    with open('power_checkpoint.txt') as f:
+        data = f.read().strip().split(',')
 
-    if daily_wh_production < sense.daily_production * 1000:
-        daily_wh_production = sense.daily_production * 1000
+        if len(data) > 1:
+            checkpoint_date = datetime.datetime.fromtimestamp(float(data[0]))
+            daily_wh_production = float(data[1])
+            daily_wh_consumption = float(data[2])
+
+            # This happens if we've rolled to the next day but we still have a checkpoint
+            # from the day before. We should reset the counters to 0
+            if checkpoint_date.day != datetime.datetime.now().day:
+                daily_wh_consumption = 0
+                daily_wh_production = 0
+
+    # This is just to make sure we don't shoot out 0 values
+    sense_daily_wh_consumption = sense.daily_usage * 1000
+    sense_daily_wh_production = sense.daily_production * 1000
+
+    if daily_wh_consumption < sense_daily_wh_consumption:
+        daily_wh_consumption = sense_daily_wh_consumption
+
+    if daily_wh_production < sense_daily_wh_production:
+        daily_wh_production = sense_daily_wh_production
 
     while True:
         dt = datetime.datetime.now()
@@ -181,6 +198,10 @@ def main():
                               'X-Pvoutput-SystemId': pvoutput_system_id,
                           },
                           data=pvoutput_request_data)
+
+            fh = open('power_checkpoint.txt', 'w+')
+            fh.write("%s,%s,%s\n" % (dt.timestamp(), daily_wh_production, daily_wh_consumption))
+            fh.close()
 
             logging.debug("")
 
