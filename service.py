@@ -5,7 +5,7 @@ from datetime import timedelta
 from time import sleep
 
 import requests
-from websocket import WebSocketTimeoutException
+from websocket import WebSocketTimeoutException, WebSocketConnectionClosedException
 
 from sense import Sense
 
@@ -67,6 +67,10 @@ def main():
         try:
             sense.get_realtime()
         except WebSocketTimeoutException:
+            logging.warning('Reconnecting Web Socket')
+            sense.start_realtime()
+            sense.get_realtime()
+        except WebSocketConnectionClosedException:
             logging.warning('Reconnecting Web Socket')
             sense.start_realtime()
             sense.get_realtime()
