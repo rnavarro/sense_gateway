@@ -5,6 +5,7 @@ from datetime import timedelta
 from time import sleep
 
 import requests
+from websocket import WebSocketTimeoutException
 
 from sense import Sense
 
@@ -46,16 +47,16 @@ def main():
         dt = datetime.datetime.now()
 
         # Fetch the latest data
-        sense.get_realtime()
+        try:
+            sense.get_realtime()
+        except WebSocketTimeoutException:
+            sense.start_realtime()
+            sense.get_realtime()
 
         # Gather Power Consumption Every 5s
         if dt.second % 5 == 0 and dt.microsecond < 500000:
             logging.debug("Current Power Consumption: %s W" % sense.active_power)
             logging.debug("Current Power Production: %s W" % sense.active_solar_power)
-            logging.debug("Sense Daily Consumption: %s Wh" % (sense.daily_usage * 1000))
-            logging.debug("Calculated Daily Consumption: %s Wh" % daily_energy_consumption)
-            logging.debug("Sense Daily Production: %s Wh" % (sense.daily_production * 1000))
-            logging.debug("Calculated Daily Production: %s Wh" % daily_energy_production)
             logging.debug("")
 
             power_consumption_data.append(sense.active_power)
@@ -70,21 +71,29 @@ def main():
                 power_consumption += metric
 
             watts_per_second_consumed = power_consumption / len(power_consumption_data)
-            kilowatts_per_hour_consumed = watts_per_second_consumed / 3600 / 1000
+            watts_per_hour_consumed = watts_per_second_consumed / 3600
 
-            daily_energy_consumption += kilowatts_per_hour_consumed
+            logging.debug("Watts per second (consumption): %s" % watts_per_second_consumed)
+            logging.debug("Kilowatts per hour (consumption): %s" % watts_per_hour_consumed)
+
+            daily_energy_consumption += watts_per_hour_consumed
 
             power_production = 0
             for metric in power_production_data:
                 power_production += metric
 
             watts_per_second_produced = power_production / len(power_production_data)
-            kilowatts_per_hour_produced = watts_per_second_produced / 3600 / 1000
+            watts_per_hour_produced = watts_per_second_produced / 3600
 
-            daily_energy_production += kilowatts_per_hour_produced
+            logging.debug("Watts per second (production): %s" % watts_per_second_produced)
+            logging.debug("Kilowatts per hour (production): %s" % watts_per_hour_produced)
 
-            logging.debug("Updated Daily Consumption: %s Wh" % daily_energy_consumption)
-            logging.debug("Updated Daily Production: %s Wh" % daily_energy_production)
+            daily_energy_production += watts_per_hour_produced
+
+            logging.debug("Sense Daily Consumption: %s Wh" % (sense.daily_usage * 1000))
+            logging.debug("Calculated Daily Consumption: %s Wh" % daily_energy_consumption)
+            logging.debug("Sense Daily Production: %s Wh" % (sense.daily_production * 1000))
+            logging.debug("Calculated Daily Production: %s Wh" % daily_energy_production)
             logging.debug("")
 
             power_consumption_data = []
@@ -92,6 +101,8 @@ def main():
 
         # True Up Power Metrics Every 5m
         if dt.minute % 5 == 0 and dt.second == 0 and dt.microsecond < 500000:
+            sense.update_trend_data()
+
             logging.debug("Hourly Power True Up")
             logging.debug("Sense Daily Consumption: %s Wh" % (sense.daily_usage * 1000))
             logging.debug("Calculated Daily Consumption: %s Wh" % daily_energy_consumption)
@@ -115,7 +126,8 @@ def main():
 
             wunderground_data = get_wunderground_data(config)
 
-            if wunderground_data['solar_radiation'] == 0:
+            solaredge_data = {}
+            if int(wunderground_data['solar_radiation']) == 0:
                 solaredge_data['dc_voltage'] = 0
             else:
                 solaredge_data = get_solaredge_data(config, dt)
