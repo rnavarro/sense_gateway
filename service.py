@@ -122,6 +122,12 @@ def main():
             power_consumption_data = []
             power_production_data = []
 
+        # Reset at midnight
+        if dt.hour == 0 and dt.minute == 0 and dt.microsecond < 500000:
+            a = 1
+            daily_wh_consumption = 0
+            daily_wh_production = 0
+
         # True Up Power Metrics Every 5m
         if dt.minute % 5 == 0 and dt.second == 0 and dt.microsecond < 500000:
             sense.update_trend_data()
@@ -148,6 +154,10 @@ def main():
                                    (sense_daily_wh_production - daily_wh_production)))
 
                 daily_wh_production = sense_daily_wh_production
+
+            fh = open('power_checkpoint.txt', 'w+')
+            fh.write("%s,%s,%s\n" % (dt.timestamp(), daily_wh_production, daily_wh_consumption))
+            fh.close()
 
             logging.debug("")
 
@@ -198,10 +208,6 @@ def main():
                               'X-Pvoutput-SystemId': pvoutput_system_id,
                           },
                           data=pvoutput_request_data)
-
-            fh = open('power_checkpoint.txt', 'w+')
-            fh.write("%s,%s,%s\n" % (dt.timestamp(), daily_wh_production, daily_wh_consumption))
-            fh.close()
 
             logging.debug("")
 
