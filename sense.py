@@ -22,6 +22,7 @@ class Sense(object):
 
         # Create session
         self.s = requests.session()
+        self._ws = None
         self._realtime = None
         self._devices = []
         self._trend_data = {}
@@ -50,12 +51,16 @@ class Sense(object):
         """Return devices."""
         return self._devices
 
-    def get_realtime(self):
-        ws = create_connection("wss://clientrt.sense.com/monitors/%s/realtimefeed?access_token=%s" %
+    def start_realtime(self):
+        self._ws = create_connection("wss://clientrt.sense.com/monitors/%s/realtimefeed?access_token=%s" %
                                (self.sense_monitor_id, self.sense_access_token),
                                timeout=WSS_TIMEOUT)
+
+    def get_realtime(self):
+        if not self._ws: self.start_realtime()
+
         for i in range(5):  # hello, features, [updates,] data
-            result = json.loads(ws.recv())
+            result = json.loads(self._ws.recv())
             if result.get('type') == 'realtime_update':
                 self._realtime = result['payload']
                 return self._realtime
@@ -196,7 +201,7 @@ if __name__ == "__main__":
     # collect authn data
     username = input("Please enter you Sense username (email address): ")
     password = getpass.getpass("Please enter your Sense password: ")
-    sense = Senseable(username, password)
+    sense = Sense(username, password)
     print("Active:", sense.active_power, "W")
     print("Active Solar:", sense.active_solar_power, "W")
     print("Active Devices:", ", ".join(sense.active_devices))
