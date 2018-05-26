@@ -124,7 +124,6 @@ def main():
 
         # Reset at midnight
         if dt.hour == 0 and dt.minute == 0 and dt.microsecond < 500000:
-            a = 1
             daily_wh_consumption = 0
             daily_wh_production = 0
 
