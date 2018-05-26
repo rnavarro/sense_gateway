@@ -74,7 +74,7 @@ def main():
             watts_per_hour_consumed = watts_per_second_consumed / 3600
 
             logging.debug("Watts per second (consumption): %s" % watts_per_second_consumed)
-            logging.debug("Kilowatts per hour (consumption): %s" % watts_per_hour_consumed)
+            logging.debug("Watts per hour (consumption): %s" % watts_per_hour_consumed)
 
             daily_energy_consumption += watts_per_hour_consumed
 
@@ -86,7 +86,7 @@ def main():
             watts_per_hour_produced = watts_per_second_produced / 3600
 
             logging.debug("Watts per second (production): %s" % watts_per_second_produced)
-            logging.debug("Kilowatts per hour (production): %s" % watts_per_hour_produced)
+            logging.debug("Watts per hour (production): %s" % watts_per_hour_produced)
 
             daily_energy_production += watts_per_hour_produced
 
