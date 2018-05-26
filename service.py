@@ -109,13 +109,13 @@ def main():
             logging.debug("Sense Daily Production: %s Wh" % (sense.daily_production * 1000))
             logging.debug("Calculated Daily Production: %s Wh" % daily_energy_production)
 
-            if sense.daily_usage > daily_energy_consumption * 1000:
-                daily_energy_consumption = sense.daily_usage * 1000
+            if sense.daily_usage > daily_energy_consumption / 1000:
+                daily_energy_consumption = sense.daily_usage / 1000
                 logging.warning("Resetting daily energy consumption. Sense: %s vs Calculated: %s"
                                 % (sense.daily_usage, daily_energy_consumption))
 
-            if sense.daily_production > daily_energy_production * 1000:
-                daily_energy_production = sense.daily_production * 1000
+            if sense.daily_production > daily_energy_production / 1000:
+                daily_energy_production = sense.daily_production / 1000
                 logging.warning("Resetting daily energy production. Sense: %s vs Calculated: %s"
                                 % (sense.daily_production, daily_energy_production))
 
