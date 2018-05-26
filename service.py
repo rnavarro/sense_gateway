@@ -50,7 +50,6 @@ def main():
 
         # Gather Power Consumption Every 5s
         if dt.second % 5 == 0 and dt.microsecond < 500000:
-            print(dt.microsecond)
             logging.debug("Current Power Consumption: %s W" % sense.active_power)
             logging.debug("Current Power Production: %s W" % sense.active_solar_power)
             logging.debug("Sense Daily Consumption: %s Wh" % (sense.daily_usage * 1000))
@@ -91,8 +90,8 @@ def main():
             power_consumption_data = []
             power_production_data = []
 
-        # True Up Power Metrics Every 60m
-        if dt.minute % 60 == 0 and dt.second == 0 and dt.microsecond < 500000:
+        # True Up Power Metrics Every 5m
+        if dt.minute % 5 == 0 and dt.second == 0 and dt.microsecond < 500000:
             logging.debug("Hourly Power True Up")
             logging.debug("Sense Daily Consumption: %s Wh" % (sense.daily_usage * 1000))
             logging.debug("Calculated Daily Consumption: %s Wh" % daily_energy_consumption)
@@ -101,13 +100,13 @@ def main():
 
             if sense.daily_usage > daily_energy_consumption * 1000:
                 daily_energy_consumption = sense.daily_usage * 1000
-                logging.info("Resetting daily energy consumption. Sense: %s vs Calculated: %s"
-                             % (sense.daily_usage, daily_energy_consumption))
+                logging.warning("Resetting daily energy consumption. Sense: %s vs Calculated: %s"
+                                % (sense.daily_usage, daily_energy_consumption))
 
             if sense.daily_production > daily_energy_production * 1000:
                 daily_energy_production = sense.daily_production * 1000
-                logging.info("Resetting daily energy production. Sense: %s vs Calculated: %s"
-                             % (sense.daily_production, daily_energy_production))
+                logging.warning("Resetting daily energy production. Sense: %s vs Calculated: %s"
+                                % (sense.daily_production, daily_energy_production))
 
             logging.debug("")
 
@@ -115,7 +114,11 @@ def main():
             logging.debug("Pushing Data to PVOutput")
 
             wunderground_data = get_wunderground_data(config)
-            solaredge_data = get_solaredge_data(config, dt)
+
+            if wunderground_data['solar_radiation'] == 0:
+                solaredge_data['dc_voltage'] = 0
+            else:
+                solaredge_data = get_solaredge_data(config, dt)
 
             ################
             # Display Data #
@@ -154,6 +157,8 @@ def main():
                           },
                           data=pvoutput_request_data)
 
+            logging.debug("")
+
         sleep(0.5)
 
 
@@ -189,8 +194,8 @@ def get_solaredge_data(config, dt):
     solaredge_url = 'https://monitoringapi.solaredge.com/equipment/%s/%s/data' \
                     % (solaredge_site_id, solaredge_serial_number)
 
-    solaredge_start_time = dt - timedelta(minutes=5)
-    solaredge_end_time = dt + timedelta(minutes=5)
+    solaredge_start_time = dt - timedelta(minutes=10)
+    solaredge_end_time = dt
 
     solaredge_request_payload = {
         'startTime': solaredge_start_time.isoformat(' ', timespec='seconds'),
@@ -200,15 +205,10 @@ def get_solaredge_data(config, dt):
 
     solaredge_response = requests.get(solaredge_url, params=solaredge_request_payload).json()
 
-    # We didn't get any telemetry data back for the last period, wait 30s and try again
-    if solaredge_response['data']['count'] < 1:
-        sleep(30)
-        solaredge_response = requests.get(solaredge_url, params=solaredge_request_payload).json()
-
-    print(solaredge_response)
+    index = solaredge_response['data']['count'] - 1
 
     return {
-        'dc_voltage': solaredge_response['data']['telemetries'][0]['dcVoltage']
+        'dc_voltage': solaredge_response['data']['telemetries'][index]['dcVoltage']
     }
 
 
